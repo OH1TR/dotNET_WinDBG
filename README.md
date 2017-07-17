@@ -67,7 +67,7 @@ Finally the bp_list variable contains the analysed API. In the example, 3 APIs a
 ```
 0:020> .loadby sos clr
 0:020> .load pykd
-0:020> !py c:\Users\lucifer\Downloads\PYKD_BOOTSTRAPPER_2.0.0.13\DotNETPlugin_v3.py
+0:020> !py c:\Users\lucifer\DotNETPlugin.py
 {
   "date": 1500306926, 
   "bp": "System.Diagnostics.Process.Start(System.Diagnostics.ProcessStartInfo)", 
