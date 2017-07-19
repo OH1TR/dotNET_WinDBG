@@ -2,7 +2,7 @@
 
 This python script is designed to automate .NET analysis with WinDBG. It can be used to analyse a PowerShell script or to unpack a binary packed using a .NET packer.
 
-You can find more information and use cases on the Talos blog post: http://blog.talosintelligence.com
+You can find more information and use cases on the Talos blog post: http://blog.talosintelligence.com/2017/07/unravelling-net-with-help-of-windbg.html
 
 Be careful, the analysed binary/PowerShell script will be executed on the system. In malware analysis context, please use a Virtual Machine.
 
