@@ -26,9 +26,13 @@ You can comment out methods with # on bp_list.txt
 # Usage
 
 Set break point after loading the .NET environment inside of your binary. Dll name varies, run assembly and use lm to find correct name. (*jit.dll)
+
 Run until .NET is loaded.
+
 Load SOS extension.
+
 Load pykd extension.
+
 Load dotNET_WinDBG
 
 ```
