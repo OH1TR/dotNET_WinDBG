@@ -12,31 +12,33 @@ Be careful, the analysed binary/PowerShell script will be executed on the system
 
 * pykd extension: https://pykd.codeplex.com/
 
+# Finding good break point candidates
+
+Decompile assembly with ildasm and parse calls with DumpILCalls.py
+
+```
+ildasm target.exe /OUT=code.il /source /quo /uni
+DumpILCalls.py code.il bp_list.txt
+```
+
+You can comment out methods with # on bp_list.txt
+
 # Usage
 
-Load SOS extension in WinDBG (to enable .NET analysis support)
-
-```
-.loadby sos clr
-```
-
-Load pykd extension
-
-```
-.load pykd
-```
-
+Set break point after loading the .NET environment inside of your binary. Dll name varies, run assembly and use lm to find correct name. (*jit.dll)
+Run until .NET is loaded.
+Load SOS extension.
+Load pykd extension.
 Load dotNET_WinDBG
 
 ```
-!py c:\path\to\DotNETPlugin.py
+sxe ld mscorjit.dll
+g
+.cordll -ve -u -l
+.load C:\Temp\pykd_ext_2.0.0.24\x86\pykd
+!py c:\path\to\DotNETPlugin.py C:\path\to\bp_list.txt
 ```
 
-Additionally, if the SOS extension does not load, you can use the following command to break point after loading the .NET environment inside of your binary. At this time, you should be able to load the SOS extension.
-
-```
-sxe ld clrjit ; g
-```
 
 # Configuration
 
@@ -44,14 +46,9 @@ The configuration is at the beginning of the python script:
 
 ```
 dump_byte_array=1
-dump_byte_array_path="c:\\users\\user\\Desktop\\"
+dump_byte_array_path="c:\\users\\user\\Desktop"
 Debug=False
 JsonDebug=True
-
-bp_list = [ ["system.dll", "System.Diagnostics.Process.Start"],
-            ["system.dll", "System.Net.WebClient.DownloadFile"],
-            ["mscorlib.dll", "System.Reflection.Assembly.Load"]
-          ]
 ```
 
 The dump_byte_array variable allows to automatically dump byte arrays in the dump_byte_array_path directory.
@@ -60,7 +57,6 @@ The Debug variable variable allows to display debug during the execution of the 
 
 The JsonDebug variable allows to display output in JSON format.
 
-Finally the bp_list variable contains the analysed API. In the example, 3 APIs are tracked by the script.
 
 # Example for output
 

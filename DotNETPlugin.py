@@ -2,6 +2,8 @@ from pykd import *
 import time
 import re as regex
 import json
+import os.path
+from os import path
 
 # sxe ld clrjit
 #.loadby sos clr
@@ -9,22 +11,19 @@ import json
 #!py c:\path\to\DotNETPlugin.py
 
 dump_byte_array=1
-dump_byte_array_path="c:\\users\\lucifer\\Desktop\\"
-Debug=False
+dump_byte_array_path="c:\\Temp"
+Debug=True
 JsonDebug=True
 
-bp_list = [ ["system.dll", "System.Diagnostics.Process.Start"],
-            ["system.dll", "System.Net.WebClient.DownloadFile"],
-            ["mscorlib.dll", "System.Reflection.Assembly.Load"]
-          ]
+bp_list = []
 
 def Custom_print(to_print):
   if Debug == True:
-    print to_print
+    print(to_print)
   
 def json_print(to_print):
   if JsonDebug == True:
-    print json.dumps(to_print, indent=2)
+    print(json.dumps(to_print, indent=2))
 
 
 class parse_clrstack_output:
@@ -51,13 +50,13 @@ class parse_clrstack_output:
         self.global_arg = self.global_arg + line + "\n"
         hex = regex.search(self.hexaPattern, line)
         if hex:
-	      self.bp = line
+          self.bp = line
         par = regex.search(self.ParamPatten, line)
         if par:
           self.param = 1
           continue
         if self.param == 1:
-	      self.args.append(line.strip())
+          self.args.append(line.strip())
     return self.global_arg, self.bp, self.args
 	
 class parse_objdump_output:	  
@@ -91,7 +90,9 @@ class handle_magic(pykd.eventHandler):
     return res.split()[0].replace("`", "")
 
   def __init__(self):
-    Custom_print("[.NET plugin] Beginning, setting breakpoints...")
+    Custom_print("[.NET plugin] Beginning, loading breakpoints...")
+    self.load_breakpoints()
+    Custom_print("[.NET plugin] Setting breakpoints...")
     self.bp = []
     for bp in bp_list:
       cmd = "!bpmd "+bp[0]+" "+bp[1]
@@ -126,7 +127,7 @@ class handle_magic(pykd.eventHandler):
         self.size = line.split(":")[1].split("(")[0].replace(" ","")
     if self.ok == 1:
       print( "[.NET plugin] let's dump "+offset+"+8 Size:"+self.size )
-      cmd = ".writemem "+dump_byte_array_path+"dump_"+str(int(time.time()))+"_"+offset+"_"+self.size+".dmp "+offset+"+8 L"+self.size
+      cmd = ".writemem "+dump_byte_array_path+"\\dump_"+str(int(time.time()))+"_"+offset+"_"+self.size+".dmp "+offset+"+8 L"+self.size
       Custom_print( "\t"+cmd )
       dbgCommand(cmd)
 	
@@ -159,14 +160,13 @@ class handle_magic(pykd.eventHandler):
       words = arg.split()
       Custom_print( "[.NET plugin] Argument "+str(i)+": "+words[0] )
       i = i+1
-      cmd = "!DumpObj /d "+words[-1]
+      cmd = "!DumpObj "+words[-1]
       Custom_print( "[.NET plugin] "+cmd )
       output = dbgCommand(cmd)
       f = parse_objdump_output()
       status, fields = f.parse(output)
       self.StrPattern = "String:.*"
       return_strArg = regex.findall(self.StrPattern, output)
-
       if status == 0:
         #No field
         Custom_print( "\t"+output.replace("\n","\n\t")+"\n" )
@@ -177,7 +177,7 @@ class handle_magic(pykd.eventHandler):
         for field in fields:
           fieldarray=field.split()        
           if fieldarray[3] == "System.String":
-            cmd = "!DumpObj /d "+fieldarray[-2]
+            cmd = "!DumpObj "+fieldarray[-2]
             output = dbgCommand(cmd)
             self.badPattern = "this object has an invalid CLASS field"
             bad = regex.search(self.badPattern, output)
@@ -208,5 +208,22 @@ class handle_magic(pykd.eventHandler):
     output_json["arguments"] = args_json
     json_print(output_json)
     return False
-	
-d_handle = handle_magic()
+
+  def load_breakpoints(self):
+    with open(sys.argv[1], 'r') as f:
+      for line in f.readlines():
+        if len(line)>0 and not line.startswith('#'):
+            tokens=line.split('!')
+            if(len(tokens)>1):
+                bp_list.append([tokens[0],tokens[1]])
+
+if __name__== "__main__":
+  if(len(sys.argv)!=2):
+    print("Usage: !py c:\path\\to\\DotNETPlugin.py c:\path\\to\\bp_list.txt")
+    print("bp_file.txt is list of dll and method name pairs. Use DumpILCalls.py to generate")
+    exit()
+    
+  if(not path.exists(dump_byte_array_path)):
+    Custom_print("Warning, dump_byte_array_path does not exist:"+dump_byte_array_path)
+
+    d_handle = handle_magic()
