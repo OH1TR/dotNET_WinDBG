@@ -17,7 +17,7 @@ Be careful, the analysed binary/PowerShell script will be executed on the system
 Decompile assembly with ildasm and parse calls with DumpILCalls.py
 
 ```
-ildasm target.exe /OUT=code.il /source /quo /uni
+ildasm target.exe /OUT=code.il /source /uni
 DumpILCalls.py code.il bp_list.txt
 ```
 
